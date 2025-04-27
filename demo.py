@@ -214,8 +214,7 @@ def show_comparison(flatten_code=True, obfuscate_names=True, compile_to_pyc=Fals
 
 if __name__ == "__main__":
     import sys
-    
-    # 解析命令行参数
+
     flatten = '--no-flatten' not in sys.argv
     name_obfuscation = '--no-name-obfuscation' not in sys.argv
     compile_to_pyc = '--pyc' in sys.argv
@@ -235,7 +234,6 @@ if __name__ == "__main__":
         if arg == '--nop-ratio' and i + 1 < len(sys.argv):
             try:
                 nop_ratio = float(sys.argv[i + 1])
-                # 确保比例在合理范围内
                 nop_ratio = max(0.05, min(0.5, nop_ratio))
             except ValueError:
                 pass
