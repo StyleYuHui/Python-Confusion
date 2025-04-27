@@ -20,24 +20,19 @@ class CodeFlattener(ast.NodeVisitor):
     
     def visit_FunctionDef(self, node):
         """访问函数定义节点，对函数体进行平坦化"""
-        # 保存原始函数体
         original_body = node.body
-        
-        # 重置状态
+
         self.state_var = '_' + ''.join(random.choice(string.ascii_lowercase) for _ in range(5))
         self.next_state = 0
         self.states = {}
-        
-        # 为每个语句分配状态
+
         state_mapping = {}
         for i, stmt in enumerate(original_body):
             state = self.get_next_state()
             state_mapping[i] = state
-        
-        # 特殊的结束状态
+
         end_state = -1
-        
-        # 创建平坦化的函数体
+
         flattened_body = []
         
         # 1. 状态变量初始化
@@ -72,16 +67,15 @@ class CodeFlattener(ast.NodeVisitor):
             if isinstance(stmt, ast.Return):
                 # 对于return语句，先执行，然后设置为结束状态
                 branch_body = [
-                    stmt,  # 原始的return语句
+                    stmt,
                     ast.Assign(
                         targets=[ast.Name(id=self.state_var, ctx=ast.Store())],
                         value=ast.Constant(value=end_state)
                     )
                 ]
             else:
-                # 对于其他语句，执行后跳转到下一个状态
                 branch_body = [
-                    stmt,  # 原始语句
+                    stmt,
                     ast.Assign(
                         targets=[ast.Name(id=self.state_var, ctx=ast.Store())],
                         value=ast.Constant(value=next_state)
@@ -113,7 +107,6 @@ class CodeFlattener(ast.NodeVisitor):
     
     def visit_Module(self, node):
         """访问模块节点，处理全局层次的代码"""
-        # 只对函数体进行平坦化处理
         new_body = []
         for item in node.body:
             if isinstance(item, ast.FunctionDef):
@@ -134,16 +127,12 @@ class PythonConfuser:
     def obfuscate(self, source_code):
         """混淆输入的源代码"""
         try:
-            # 解析源代码为AST
             tree = ast.parse(source_code)
-            
-            # 应用代码平坦化
+
             flattened_tree = self.flattener.visit(tree)
-            
-            # 修复行号等信息
+
             ast.fix_missing_locations(flattened_tree)
-            
-            # 将AST转换回Python代码
+
             obfuscated_code = astor.to_source(flattened_tree)
             
             return obfuscated_code

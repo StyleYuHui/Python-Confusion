@@ -61,7 +61,7 @@ class BytecodeObfuscator:
                     co_consts[i] = self._insert_nops(const)
             
             # 计算要插入的NOP指令数量
-            num_instructions = len(co_code) // 2  # 假设每条指令平均2字节
+            num_instructions = len(co_code) // 2
             num_nops = int(num_instructions * self.nop_ratio)
             
             # 逐字节检查并插入NOP指令
@@ -110,8 +110,8 @@ class BytecodeObfuscator:
                 co_varnames,
                 co_filename,
                 co_name,
-                co_firstlineno,   # 这应该是整数
-                co_lnotab,        # 这可能需要是字节类型
+                co_firstlineno,
+                co_lnotab,
                 co_freevars,
                 co_cellvars
             ]
@@ -133,22 +133,19 @@ class BytecodeObfuscator:
                 print(f"创建CodeType对象错误: {e}")
                 # 根据错误信息，对各参数进行适当转换
                 if "argument 13 must be str, not int" in str(e):
-                    # 在某些Python版本中co_firstlineno可能需要是字符串
                     new_code_obj_args[12] = str(co_firstlineno)
                 elif "argument 13 must be int, not str" in str(e):
-                    # 在某些Python版本中co_firstlineno可能需要是整数
                     new_code_obj_args[12] = int(co_firstlineno) if isinstance(co_firstlineno, str) else co_firstlineno
                 
                 try:
                     return types.CodeType(*new_code_obj_args)
                 except TypeError as e2:
                     print(f"第二次尝试创建CodeType对象错误: {e2}")
-                    # 返回原始代码对象，不进行NOP注入
                     return code_obj
         except Exception as e:
             print(f"NOP插入失败: {str(e)}")
             traceback.print_exc()
-            return code_obj  # 返回原始代码对象
+            return code_obj
     
     def obfuscate_bytecode(self, source_code, filename="<string>"):
         """
@@ -161,10 +158,10 @@ class BytecodeObfuscator:
         Returns:
             混淆后的代码对象
         """
-        # 编译源代码为代码对象
+
         code_obj = compile(source_code, filename, 'exec')
         
-        # 插入NOP指令
+
         obfuscated_code = self._insert_nops(code_obj)
         
         return obfuscated_code
@@ -192,24 +189,21 @@ class BytecodeObfuscator:
             else:
                 magic = importlib.util.MAGIC
             
-            # 获取当前时间戳
+
             timestamp = int(time.time())
             
-            # 确保输出目录存在
+
             os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
             
             # 写入pyc文件
             with open(output_file, 'wb') as f:
                 f.write(magic)
-                # Python 3.7+使用了新的pyc文件格式
                 if sys.version_info >= (3, 7):
-                    f.write(struct.pack('<I', 0))  # 写入位标志
+                    f.write(struct.pack('<I', 0))
                 f.write(struct.pack('<I', timestamp))
-                # Python 3.8+增加了源文件大小
                 if sys.version_info >= (3, 8):
                     source_size = len(source_code.encode())
                     f.write(struct.pack('<I', source_size))
-                # 写入代码对象
                 marshal.dump(code_obj, f)
             
             print(f"编译成功: {output_file}")
@@ -233,13 +227,12 @@ def simple_compile_to_pyc(input_file, output_file=None):
     """
     try:
         if output_file is None:
-            # 在相同目录下生成与输入文件同名的pyc文件
             output_file = input_file + 'c'
         
-        # 确保输出目录存在
+
         os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
         
-        # 使用标准库函数编译为pyc
+
         py_compile.compile(input_file, output_file)
         print(f"编译成功: {output_file}")
         return True
@@ -264,16 +257,13 @@ def obfuscate_to_pyc(input_file, output_file=None, nop_ratio=0.2, use_original_c
         是否成功混淆和编译
     """
     try:
-        # 读取输入文件或使用提供的源代码
         if source_code is None:
             with open(input_file, 'r', encoding='utf-8') as f:
                 source_code = f.read()
         
         if output_file is None:
-            # 在相同目录下生成与输入文件同名的pyc文件
             output_file = input_file + 'c'
-        
-        # 确保输出目录存在
+
         os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
         
         print(f"输入文件: {input_file}")
@@ -296,10 +286,8 @@ def obfuscate_to_pyc(input_file, output_file=None, nop_ratio=0.2, use_original_c
                     os.unlink(temp_file)
                 return result
             else:
-                # 使用Python内置的编译器直接编译
                 return simple_compile_to_pyc(input_file, output_file)
         else:
-            # 使用自定义混淆器进行字节码混淆并编译
             obfuscator = BytecodeObfuscator(nop_ratio=nop_ratio)
             return obfuscator.compile_to_pyc(source_code, output_file, input_file)
         

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Python代码混淆器 - 主应用启动文件
+主应用启动文件
 """
 
 import os
@@ -16,7 +16,6 @@ from ui.obfuscator_ui import ObfuscatorUI
 
 
 def main():
-    """启动主应用程序"""
     app = ObfuscatorUI()
     app.mainloop()
 

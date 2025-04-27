@@ -23,7 +23,7 @@ class ObfuscatorUI(tk.Tk):
         self.geometry("750x600")
         self.resizable(True, True)
         
-        # 设置应用图标
+        
         icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "kunkun.ico")
         if os.path.exists(icon_path):
             self.iconbitmap(icon_path)
@@ -86,7 +86,6 @@ class ObfuscatorUI(tk.Tk):
         self.status_bar = ttk.Label(self, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
     
     def setup_layout(self):
-        """设置组件布局"""
         # 文件选择区域布局
         self.file_frame.pack(fill=tk.X, padx=10, pady=5)
         
@@ -101,7 +100,7 @@ class ObfuscatorUI(tk.Tk):
         # 设置列权重，使输入框可以随窗口调整大小
         self.file_frame.columnconfigure(1, weight=1)
         
-        # 混淆选项区域布局
+        # 混淆选项区
         self.options_frame.pack(fill=tk.X, padx=10, pady=5)
         
         self.flatten_check.grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
@@ -112,20 +111,20 @@ class ObfuscatorUI(tk.Tk):
         self.nop_ratio.grid(row=2, column=1, sticky=tk.W+tk.E, padx=5, pady=5)
         self.nop_value.grid(row=2, column=2, sticky=tk.W, padx=5, pady=5)
         
-        # 初始状态
+
         self.toggle_pyc()
         
-        # 按钮区域布局
+        # 按钮区域
         self.buttons_frame.pack(fill=tk.X, padx=10, pady=5)
         
         self.obfuscate_button.pack(side=tk.LEFT, padx=5, pady=5)
         self.clear_button.pack(side=tk.LEFT, padx=5, pady=5)
         
-        # 输出区域布局
+        # 输出区
         self.output_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         self.log_output.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
-        # 状态栏布局
+        # 状态栏
         self.status_bar.pack(fill=tk.X, side=tk.BOTTOM)
     
     def browse_input(self):

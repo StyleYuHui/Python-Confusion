@@ -50,7 +50,7 @@ pip install -r requirements.txt
 
 ## 使用方法
 
-### 命令行方式
+### 
 
 ```bash
 python main.py input.py -o output.py --pyc --nop-ratio 0.2

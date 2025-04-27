@@ -53,13 +53,11 @@ class CompletePythonObfuscator:
             # 步骤1: 函数名混淆
             if self.obfuscate_names:
                 tree, self.name_mapping = obfuscate_function_names(tree)
-                # 修复行号等信息
                 ast.fix_missing_locations(tree)
             
             # 步骤2: 代码平坦化
             if self.flatten_code:
                 tree = self.original_confuser.flattener.visit(tree)
-                # 修复行号等信息
                 ast.fix_missing_locations(tree)
             
             # 生成混淆后的源代码
@@ -74,7 +72,6 @@ class CompletePythonObfuscator:
             
             # 步骤3: 如果需要编译为pyc，进行字节码混淆
             if self.compile_to_pyc:
-                # 返回混淆后的代码，供后续编译使用
                 return obfuscated_code
             
             return obfuscated_code
@@ -104,33 +101,27 @@ def obfuscate_file(input_file, output_file=None, flatten_code=True,
         混淆结果消息
     """
     try:
-        # 读取输入文件
         with open(input_file, 'r', encoding='utf-8') as f:
             source_code = f.read()
-        
-        # 创建混淆器
+
         confuser = CompletePythonObfuscator(
             flatten_code=flatten_code,
             obfuscate_names=obfuscate_names,
             compile_to_pyc=compile_to_pyc,
             nop_ratio=nop_ratio
         )
-        
-        # 首先对源码进行混淆（代码平坦化和函数名混淆）
+
         obfuscated_code = confuser.obfuscate(source_code, input_file)
-        
-        # 特殊处理pyc编译
+
         if compile_to_pyc:
-            # 如果没有指定输出文件，则使用默认名称
             if output_file is None:
                 output_file = input_file + 'c'
-            
-            # 使用字节码混淆器直接编译为pyc（使用已混淆的代码）
+
             success = obfuscate_to_pyc(
                 input_file=input_file,
                 output_file=output_file,
                 nop_ratio=nop_ratio,
-                source_code=obfuscated_code  # 传递已混淆的代码而不是重新读取文件
+                source_code=obfuscated_code
             )
             
             if success:
@@ -138,7 +129,6 @@ def obfuscate_file(input_file, output_file=None, flatten_code=True,
             else:
                 return "pyc文件编译失败"
         else:
-            # 写入输出文件或返回
             if output_file:
                 with open(output_file, 'w', encoding='utf-8') as f:
                     f.write(obfuscated_code)
