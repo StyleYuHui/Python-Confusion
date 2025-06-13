@@ -1,6 +1,6 @@
 # Python代码混淆器
 
-这是一个Python代码混淆工具，集成了多种混淆技术，包括代码平坦化技术（Control Flow Flattening）、函数名替换和字节码级混淆，增加代码的理解难度，同时保持原始功能不变。
+这是一个Python代码混淆工具，集成了多种混淆技术，包括代码平坦化技术（Control Flow Flattening）、函数名替换、变量名混淆和字节码级混淆，增加代码的理解难度，同时保持原始功能不变。
 
 ## 功能特点
 
@@ -8,6 +8,7 @@
 - 引入状态变量和状态机结构替代原始控制流
 - 随机化状态变量名称，增加逆向分析难度
 - 使用随机字符串替换函数名
+- 使用随机字符串替换局部变量名
 - 编译为pyc字节码文件，并插入NOP花指令
 - 保持代码功能完全一致
 - 支持函数级别的代码混淆
@@ -33,6 +34,15 @@
 2. 替换所有函数定义和调用中的函数名
 3. 保持函数调用关系不变，确保代码功能正常
 
+### 变量名混淆
+
+变量名混淆通过将局部变量名替换为随机生成的字符串来增加代码的理解难度：
+
+1. 为代码中的每个局部变量生成唯一的随机名称
+2. 保持函数参数名不变，确保函数调用正常
+3. 保持模块级别变量名不变，确保模块导入正常
+4. 保持变量作用域一致性，确保代码功能正常
+
 ### 字节码混淆
 
 字节码混淆在编译后的Python字节码级别进行操作：
@@ -50,7 +60,7 @@ pip install -r requirements.txt
 
 ## 使用方法
 
-### 
+### 命令行方式
 
 ```bash
 python main.py input.py -o output.py --pyc --nop-ratio 0.2
@@ -61,6 +71,7 @@ python main.py input.py -o output.py --pyc --nop-ratio 0.2
 - `-o output.py`: 输出的混淆后文件
 - `--no-flatten`: 禁用代码平坦化
 - `--no-name-obfuscation`: 禁用函数名混淆
+- `--no-var-obfuscation`: 禁用变量名混淆
 - `--pyc`: 编译为pyc文件并插入NOP指令
 - `--nop-ratio`: NOP指令比例 (默认: 0.2)
 
@@ -84,6 +95,7 @@ from mods.complete_obfuscator import CompletePythonObfuscator
 confuser = CompletePythonObfuscator(
     flatten_code=True,     # 启用代码平坦化
     obfuscate_names=True,  # 启用函数名混淆
+    obfuscate_vars=True,   # 启用变量名混淆
     compile_to_pyc=True,   # 编译为pyc文件
     nop_ratio=0.2          # NOP指令比例
 )
@@ -105,6 +117,7 @@ print(obfuscated_code)
 python demo.py                      # 展示所有混淆技术
 python demo.py --only-flatten       # 仅展示代码平坦化
 python demo.py --only-name-obfuscation  # 仅展示函数名混淆
+python demo.py --only-var-obfuscation   # 仅展示变量名混淆
 python demo.py --only-pyc           # 仅展示pyc编译和字节码混淆
 python demo.py --pyc --nop-ratio 0.3  # 自定义NOP指令比例
 ```
@@ -115,9 +128,10 @@ python demo.py --pyc --nop-ratio 0.3  # 自定义NOP指令比例
 
 1. 只对函数体内的代码进行平坦化处理
 2. 函数名替换不处理类方法和内置函数
-3. 对于复杂的控制流结构（如嵌套循环、异常处理等），效果可能不够理想
-4. 不处理类定义、装饰器等高级Python特性
-5. pyc文件在不同Python版本间可能不兼容
+3. 变量名混淆不处理函数参数和模块级别变量
+4. 对于复杂的控制流结构（如嵌套循环、异常处理等），效果可能不够理想
+5. 不处理类定义、装饰器等高级Python特性
+6. pyc文件在不同Python版本间可能不兼容
 
 # Python代码混淆器 UI界面
 
@@ -128,6 +142,7 @@ python demo.py --pyc --nop-ratio 0.3  # 自定义NOP指令比例
 - 支持将Python源代码进行多种混淆处理
 - 提供代码平坦化选项
 - 支持函数名混淆
+- 支持变量名混淆
 - 支持编译为pyc文件并插入NOP指令
 - 可配置NOP指令的比例
 - 提供直观的用户界面和详细的操作日志
@@ -159,7 +174,7 @@ app.mainloop()
 界面主要包含以下几个部分：
 
 1. **文件选择区域**：选择输入的Python源文件和指定输出文件路径
-2. **混淆选项区域**：配置混淆选项，包括代码平坦化、函数名混淆和pyc编译
+2. **混淆选项区域**：配置混淆选项，包括代码平坦化、函数名混淆、变量名混淆和pyc编译
 3. **操作按钮**：包含开始混淆和清除表单的按钮
 4. **日志输出区域**：显示混淆过程的详细日志
 5. **状态栏**：显示当前操作状态

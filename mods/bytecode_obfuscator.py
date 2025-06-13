@@ -131,7 +131,6 @@ class BytecodeObfuscator:
                 return types.CodeType(*new_code_obj_args)
             except TypeError as e:
                 print(f"创建CodeType对象错误: {e}")
-                # 根据错误信息，对各参数进行适当转换
                 if "argument 13 must be str, not int" in str(e):
                     new_code_obj_args[12] = str(co_firstlineno)
                 elif "argument 13 must be int, not str" in str(e):

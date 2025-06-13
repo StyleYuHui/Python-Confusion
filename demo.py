@@ -41,6 +41,20 @@ def is_prime(n):
         i += 6
     return True
 
+def process_data(data_list):
+    # 处理数据列表
+    result = []
+    temp_sum = 0
+    for item in data_list:
+        if isinstance(item, (int, float)):
+            temp_sum += item
+            if temp_sum > 100:
+                result.append(temp_sum)
+                temp_sum = 0
+        elif isinstance(item, str):
+            result.append(item.upper())
+    return result
+
 # 测试函数
 result = calculate_sum(10)
 print(f"1到10的加权和: {result}")
@@ -50,9 +64,14 @@ for num in range(10, 20):
         print(f"{num}是质数")
     else:
         print(f"{num}不是质数")
+
+# 测试变量名混淆
+test_data = [1, 2, 3, 4, 5, "hello", 6, 7, 8, 9, "world"]
+processed = process_data(test_data)
+print("处理后的数据:", processed)
 """
 
-def show_comparison(flatten_code=True, obfuscate_names=True, compile_to_pyc=False, nop_ratio=0.2):
+def show_comparison(flatten_code=True, obfuscate_names=True, obfuscate_vars=True, compile_to_pyc=False, nop_ratio=0.2):
     """展示混淆前后的代码对比"""
     print("=" * 80)
     print("Python代码混淆器演示")
@@ -60,6 +79,8 @@ def show_comparison(flatten_code=True, obfuscate_names=True, compile_to_pyc=Fals
         print("- 启用代码平坦化")
     if obfuscate_names:
         print("- 启用函数名混淆")
+    if obfuscate_vars:
+        print("- 启用变量名混淆")
     if compile_to_pyc:
         print(f"- 启用pyc编译并插入NOP花指令 (比例: {nop_ratio})")
     print("=" * 80)
@@ -79,6 +100,8 @@ def show_comparison(flatten_code=True, obfuscate_names=True, compile_to_pyc=Fals
         suffix += "_flat"
     if obfuscate_names:
         suffix += "_named"
+    if obfuscate_vars:
+        suffix += "_var"
     if compile_to_pyc:
         suffix += "_pyc"
     
@@ -114,6 +137,7 @@ def show_comparison(flatten_code=True, obfuscate_names=True, compile_to_pyc=Fals
         confuser = CompletePythonObfuscator(
             flatten_code=flatten_code,
             obfuscate_names=obfuscate_names,
+            obfuscate_vars=obfuscate_vars,
             compile_to_pyc=False
         )
         obfuscated_code = confuser.obfuscate(SAMPLE_CODE, temp_py_path)
@@ -126,6 +150,7 @@ def show_comparison(flatten_code=True, obfuscate_names=True, compile_to_pyc=Fals
         confuser = CompletePythonObfuscator(
             flatten_code=flatten_code,
             obfuscate_names=obfuscate_names,
+            obfuscate_vars=obfuscate_vars,
             compile_to_pyc=False
         )
         obfuscated_code = confuser.obfuscate(SAMPLE_CODE)
@@ -182,6 +207,11 @@ def show_comparison(flatten_code=True, obfuscate_names=True, compile_to_pyc=Fals
         for original, obfuscated in confuser.name_mapping.items():
             print(f"{original} -> {obfuscated}")
     
+    if obfuscate_vars and hasattr(confuser, 'var_mapping') and confuser.var_mapping:
+        print("\n【变量名映射】:")
+        for original, obfuscated in confuser.var_mapping.items():
+            print(f"{original} -> {obfuscated}")
+    
     print("\n【混淆后的代码特点】:")
     features = []
     if flatten_code:
@@ -194,6 +224,11 @@ def show_comparison(flatten_code=True, obfuscate_names=True, compile_to_pyc=Fals
     if obfuscate_names:
         features.append(f"{counter}. 替换了函数名为随机字符串")
         features.append(f"{counter+1}. 保持了函数调用的一致性")
+        counter += 2
+        
+    if obfuscate_vars:
+        features.append(f"{counter}. 替换了局部变量名为随机字符串")
+        features.append(f"{counter+1}. 保持了变量作用域的一致性")
         counter += 2
         
     if compile_to_pyc:
@@ -217,16 +252,19 @@ if __name__ == "__main__":
 
     flatten = '--no-flatten' not in sys.argv
     name_obfuscation = '--no-name-obfuscation' not in sys.argv
+    var_obfuscation = '--no-var-obfuscation' not in sys.argv
     compile_to_pyc = '--pyc' in sys.argv
     verbose = '--verbose' in sys.argv
     
     # 特定混淆模式
     if '--only-flatten' in sys.argv:
-        flatten, name_obfuscation, compile_to_pyc = True, False, False
+        flatten, name_obfuscation, var_obfuscation, compile_to_pyc = True, False, False, False
     elif '--only-name-obfuscation' in sys.argv:
-        flatten, name_obfuscation, compile_to_pyc = False, True, False
+        flatten, name_obfuscation, var_obfuscation, compile_to_pyc = False, True, False, False
+    elif '--only-var-obfuscation' in sys.argv:
+        flatten, name_obfuscation, var_obfuscation, compile_to_pyc = False, False, True, False
     elif '--only-pyc' in sys.argv:
-        flatten, name_obfuscation, compile_to_pyc = False, False, True
+        flatten, name_obfuscation, var_obfuscation, compile_to_pyc = False, False, False, True
     
     # NOP比例
     nop_ratio = 0.2
@@ -243,6 +281,7 @@ if __name__ == "__main__":
         show_comparison(
             flatten_code=flatten, 
             obfuscate_names=name_obfuscation,
+            obfuscate_vars=var_obfuscation,
             compile_to_pyc=compile_to_pyc,
             nop_ratio=nop_ratio
         )
@@ -250,6 +289,4 @@ if __name__ == "__main__":
         if verbose:
             import traceback
             traceback.print_exc()
-        else:
-            print(f"错误: {str(e)}")
-        sys.exit(1) 
+        print(f"错误: {str(e)}") 

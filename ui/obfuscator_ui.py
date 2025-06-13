@@ -18,8 +18,8 @@ class ObfuscatorUI(tk.Tk):
     
     def __init__(self):
         super().__init__()
-        
-        self.title("Python代码混淆器V0.01 By PaperPlane")
+
+        self.title("Python代码混淆器V1.2.0 By PaperPlane")
         self.geometry("750x600")
         self.resizable(True, True)
         
@@ -58,6 +58,10 @@ class ObfuscatorUI(tk.Tk):
         
         self.name_var = tk.BooleanVar(value=True)
         self.name_check = ttk.Checkbutton(self.options_frame, text="启用函数名混淆", variable=self.name_var)
+
+        self.name_varalue = tk.BooleanVar(value=True)
+        self.name2_check = ttk.Checkbutton(self.options_frame, text="启用变量名混淆", variable=self.name_varalue)
+
         
         self.pyc_var = tk.BooleanVar(value=False)
         self.pyc_check = ttk.Checkbutton(self.options_frame, text="编译为pyc文件并插入NOP指令", variable=self.pyc_var, command=self.toggle_pyc)
@@ -110,7 +114,10 @@ class ObfuscatorUI(tk.Tk):
         self.nop_label.grid(row=2, column=0, sticky=tk.W, padx=5, pady=5)
         self.nop_ratio.grid(row=2, column=1, sticky=tk.W+tk.E, padx=5, pady=5)
         self.nop_value.grid(row=2, column=2, sticky=tk.W, padx=5, pady=5)
-        
+        self.flatten_check.grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
+        self.name_check.grid(row=0, column=1, sticky=tk.W, padx=5, pady=5)
+        self.name2_check.grid(row=0, column=2, sticky=tk.W, padx=5, pady=5)
+        self.pyc_check.grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
 
         self.toggle_pyc()
         
@@ -214,6 +221,7 @@ class ObfuscatorUI(tk.Tk):
         
         self.flatten_var.set(True)
         self.name_var.set(True)
+        self.name_varalue.set(True)
         self.pyc_var.set(False)
         self.nop_ratio.set(0.2)
         self.update_nop_value()
@@ -241,62 +249,56 @@ class ObfuscatorUI(tk.Tk):
             return
         
         if not output_file:
-            messagebox.showerror("错误", "请指定输出文件!")
+            messagebox.showerror("错误", "请选择输出文件!")
             return
         
-        # 获取选项
+        # 获取混淆选项
         flatten_code = self.flatten_var.get()
         obfuscate_names = self.name_var.get()
+        obfuscate_vars = self.name_varalue.get()
         compile_to_pyc = self.pyc_var.get()
-        nop_ratio = round(self.nop_ratio.get(), 2)
-        
-        # 日志清空
-        self.log_output.config(state=tk.NORMAL)
-        self.log_output.delete(1.0, tk.END)
-        self.log_output.config(state=tk.DISABLED)
+        nop_ratio = self.nop_ratio.get()
         
         # 更新状态
         self.status_var.set("正在混淆...")
-        
-        # 打印混淆选项
+        self.log("开始混淆处理...")
         self.log(f"输入文件: {input_file}")
         self.log(f"输出文件: {output_file}")
-        self.log(f"代码平坦化: {'启用' if flatten_code else '禁用'}")
-        self.log(f"函数名混淆: {'启用' if obfuscate_names else '禁用'}")
-        self.log(f"编译为pyc: {'启用' if compile_to_pyc else '禁用'}")
+        self.log(f"混淆选项:")
+        self.log(f"- 代码平坦化: {'启用' if flatten_code else '禁用'}")
+        self.log(f"- 函数名混淆: {'启用' if obfuscate_names else '禁用'}")
+        self.log(f"- 变量名混淆: {'启用' if obfuscate_vars else '禁用'}")
+        self.log(f"- 编译为pyc: {'启用' if compile_to_pyc else '禁用'}")
         if compile_to_pyc:
-            self.log(f"NOP指令比例: {nop_ratio}")
-        self.log("-" * 50)
+            self.log(f"- NOP指令比例: {nop_ratio}")
         
-        # 执行混淆
         try:
+            # 执行混淆
             result = obfuscate_file(
                 input_file=input_file,
                 output_file=output_file,
                 flatten_code=flatten_code,
                 obfuscate_names=obfuscate_names,
+                obfuscate_vars=obfuscate_vars,
                 compile_to_pyc=compile_to_pyc,
                 nop_ratio=nop_ratio
             )
             
-            # 输出结果
-            if isinstance(result, str):
-                self.log(result)
-            else:
-                self.log("混淆成功完成!")
-            
-            # 成功完成
+            self.log("\n混淆完成!")
+            if(obfuscate_names and obfuscate_vars):
+                self.log("函数名与变量名映射表以注释的形式标记在混淆后py文件开始\n如有需要可以删除（utf-8）\n")
+            elif(obfuscate_names and not obfuscate_vars):
+                self.log("函数名映射表以注释的形式标记在混淆后py文件开始\n如有需要可以删除（utf-8）\n")
+            elif(obfuscate_vars and not obfuscate_vars):
+                self.log("变量名映射表以注释的形式标记在混淆后py文件开始\n如有需要可以删除（utf-8）\n")
+            self.log(result)
             self.status_var.set("混淆完成")
-            messagebox.showinfo("成功", "混淆处理已完成!")
             
         except Exception as e:
-            import traceback
-            error_msg = str(e)
-            self.log(f"错误: {error_msg}")
-            self.log(traceback.format_exc())
-            
+            error_msg = f"混淆过程中发生错误: {str(e)}"
+            self.log(f"\n错误: {error_msg}")
             self.status_var.set("混淆失败")
-            messagebox.showerror("错误", f"混淆处理失败!\n{error_msg}")
+            messagebox.showerror("错误", error_msg)
 
 
 def main():

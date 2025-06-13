@@ -2,7 +2,7 @@ import os
 import ast
 import astor
 from .confuser import PythonConfuser, obfuscate_file as flatten_file
-from .name_obfuscator import obfuscate_function_names
+from .name_obfuscator import obfuscate_function_names, obfuscate_variable_names
 from .bytecode_obfuscator import obfuscate_to_pyc, BytecodeObfuscator
 
 
@@ -11,10 +11,11 @@ class CompletePythonObfuscator:
     完整的Python代码混淆器 - 集成多种混淆技术
     1. 代码平坦化
     2. 函数名混淆
-    3. 字节码混淆(NOP指令)和pyc编译
+    3. 变量名混淆
+    4. 字节码混淆(NOP指令)和pyc编译
     """
     
-    def __init__(self, flatten_code=True, obfuscate_names=True, 
+    def __init__(self, flatten_code=True, obfuscate_names=True, obfuscate_vars=True,
                 compile_to_pyc=False, nop_ratio=0.2):
         """
         初始化混淆器
@@ -22,11 +23,13 @@ class CompletePythonObfuscator:
         Args:
             flatten_code: 是否启用代码平坦化
             obfuscate_names: 是否启用函数名混淆
+            obfuscate_vars: 是否启用变量名混淆
             compile_to_pyc: 是否编译为pyc文件
             nop_ratio: NOP指令占比
         """
         self.flatten_code = flatten_code
         self.obfuscate_names = obfuscate_names
+        self.obfuscate_vars = obfuscate_vars
         self.compile_to_pyc = compile_to_pyc
         self.nop_ratio = nop_ratio
         
@@ -34,6 +37,7 @@ class CompletePythonObfuscator:
         self.bytecode_obfuscator = BytecodeObfuscator(nop_ratio=nop_ratio) if compile_to_pyc else None
         
         self.name_mapping = {}  # 保存函数名映射关系
+        self.var_mapping = {}   # 保存变量名映射关系
     
     def obfuscate(self, source_code, filename="<string>"):
         """
@@ -55,7 +59,12 @@ class CompletePythonObfuscator:
                 tree, self.name_mapping = obfuscate_function_names(tree)
                 ast.fix_missing_locations(tree)
             
-            # 步骤2: 代码平坦化
+            # 步骤2: 变量名混淆
+            if self.obfuscate_vars:
+                tree, self.var_mapping = obfuscate_variable_names(tree)
+                ast.fix_missing_locations(tree)
+            
+            # 步骤3: 代码平坦化
             if self.flatten_code:
                 tree = self.original_confuser.flattener.visit(tree)
                 ast.fix_missing_locations(tree)
@@ -63,14 +72,24 @@ class CompletePythonObfuscator:
             # 生成混淆后的源代码
             obfuscated_code = astor.to_source(tree)
             
-            # 如果有函数名映射，添加注释
+            # 添加映射表注释
+            mapping_comment = ""
             if self.obfuscate_names and self.name_mapping:
-                mapping_comment = "# 函数名映射表:\n"
+                mapping_comment += "# 函数名映射表:\n"
                 for original, obfuscated in self.name_mapping.items():
                     mapping_comment += f"# {original} -> {obfuscated}\n"
-                obfuscated_code = mapping_comment + "\n" + obfuscated_code
+                mapping_comment += "\n"
             
-            # 步骤3: 如果需要编译为pyc，进行字节码混淆
+            if self.obfuscate_vars and self.var_mapping:
+                mapping_comment += "# 变量名映射表:\n"
+                for original, obfuscated in self.var_mapping.items():
+                    mapping_comment += f"# {original} -> {obfuscated}\n"
+                mapping_comment += "\n"
+            
+            if mapping_comment:
+                obfuscated_code = mapping_comment + obfuscated_code
+            
+            # 步骤4: 如果需要编译为pyc，进行字节码混淆
             if self.compile_to_pyc:
                 return obfuscated_code
             
@@ -82,10 +101,15 @@ class CompletePythonObfuscator:
     def get_name_mapping(self):
         """获取函数名映射表"""
         return self.name_mapping
+    
+    def get_var_mapping(self):
+        """获取变量名映射表"""
+        return self.var_mapping
 
 
 def obfuscate_file(input_file, output_file=None, flatten_code=True, 
-                  obfuscate_names=True, compile_to_pyc=False, nop_ratio=0.2):
+                  obfuscate_names=True, obfuscate_vars=True,
+                  compile_to_pyc=False, nop_ratio=0.2):
     """
     混淆指定的Python文件
     
@@ -94,6 +118,7 @@ def obfuscate_file(input_file, output_file=None, flatten_code=True,
         output_file: 输出文件路径（如果为None，则输出到屏幕）
         flatten_code: 是否启用代码平坦化
         obfuscate_names: 是否启用函数名混淆
+        obfuscate_vars: 是否启用变量名混淆
         compile_to_pyc: 是否编译为pyc文件
         nop_ratio: NOP指令比例
         
@@ -107,6 +132,7 @@ def obfuscate_file(input_file, output_file=None, flatten_code=True,
         confuser = CompletePythonObfuscator(
             flatten_code=flatten_code,
             obfuscate_names=obfuscate_names,
+            obfuscate_vars=obfuscate_vars,
             compile_to_pyc=compile_to_pyc,
             nop_ratio=nop_ratio
         )
